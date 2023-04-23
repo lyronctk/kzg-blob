@@ -36,7 +36,18 @@ fn main() {
         lagrange_basis.push(G1::generator() * lambda);
     }
 
-    println!("{:?}", G2::generator() * tau);
+    // Compute tau in G2 for the pairing check 
+    let tau_g2 = G2::generator() * tau;
+
+    println!("== powers of tau in G1, [tau^i]_1");
     println!("{:?}", powers);
+    println!("==");
+
+    println!("== lagrange basis in G1, L");
     println!("{:?}", lagrange_basis);
+    println!("==");
+
+    println!("== tau in G2, [tau]_2");
+    println!("{:?}", tau_g2);
+    println!("==");
 }
