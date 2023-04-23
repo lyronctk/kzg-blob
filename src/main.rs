@@ -1,6 +1,6 @@
 use halo2_base::halo2_proofs::{
     arithmetic::Field,
-    halo2curves::bn256::{Fr, G1, G1Affine},
+    halo2curves::bn256::{Fr, G1, G2},
 };
 
 // Will be toxic waste in practice
@@ -14,6 +14,14 @@ const T: u64 = 2; // 64
 
 fn main() {
     let tau: Fr = Fr::from(TAU);
+
+    // Powers of tau to commit to blob polynomial p(X)
+    let mut powers: Vec<G1> = vec![G1::generator() * tau];
+    for _ in 1u64..T {
+        powers.push(powers.last().unwrap() * tau);
+    }
+    
+    // Lagrange basis to commit to interpolation polynomial r(X)
     let mut lagrange_basis: Vec<G1> = Vec::new();
     for i in 0u64..T {
         let i_fr: Fr = Fr::from(i);
@@ -27,14 +35,8 @@ fn main() {
         } 
         lagrange_basis.push(G1::generator() * lambda);
     }
+
+    println!("{:?}", G2::generator() * tau);
+    println!("{:?}", powers);
     println!("{:?}", lagrange_basis);
-
-    // let mut rng = OsRng;
-    // let tau = G1::generator() * Fr::from(123);
-    // println!("{:?}", tau);
-
-    // let P = Some(G1Affine::random(&mut rng)).unwrap();
-    // let Q = Some(G2Affine::random(&mut rng)).unwrap();
-    // println!("{:?}", P);
-    // println!("{:?}", Q);
 }
