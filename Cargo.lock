@@ -303,7 +303,8 @@ name = "kzg-blob"
 version = "0.1.0"
 dependencies = [
  "halo2-base",
- "rand_core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
