@@ -1,0 +1,7 @@
+{
+  "n": 4,
+  "t": 2,
+  "pp_f": "out/pp_debug.json",
+  "blob_data_f": "out/blob_data_debug.json",
+  "blob_commit_f": "out/blob_commit_debug.json"
+}

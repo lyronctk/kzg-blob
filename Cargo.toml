@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+config-file = { version = "0.2.3", features = ["json"] }
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "axiom-dev-0406" }
 serde = "1.0.160"
 serde_json = "1.0.96"
@@ -13,3 +14,8 @@ serde_json = "1.0.96"
 [[bin]]
 name = "trusted_setup"
 path = "src/trusted_setup.rs"
+
+[[bin]]
+name = "blob_commit"
+path = "src/blob_commit.rs"
+ 
