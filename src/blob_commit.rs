@@ -1,8 +1,10 @@
 use config_file::FromConfigFile;
 use halo2_base::halo2_proofs::{
+    arithmetic::{eval_polynomial, lagrange_interpolate},
     halo2curves::bn256::{Fr, G1Affine, G1, G2},
-    poly::{Coeff, EvaluationDomain, ExtendedLagrangeCoeff, LagrangeCoeff, Polynomial},
 };
+use rand::prelude::*;
+use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 
@@ -29,27 +31,31 @@ struct pp {
 }
 
 fn main() {
+    let mut rng = ChaCha8Rng::seed_from_u64(123);
+
     let cfg = Config::from_config_file(CONFIG_F).unwrap();
     let pp: pp = serde_json::from_reader(File::open(cfg.pp_f).unwrap()).unwrap();
 
-    let dummy_blob: Vec<Fr> = (1..=cfg.blob_len).map(|x| Fr::from(x * 1000)).collect();
-    let domain: EvaluationDomain<Fr> = EvaluationDomain::new(
-        cfg.blob_len as u32 - cfg.openings.len() as u32,
-        cfg.log_blob_len as u32,
-    );
-    let p: Polynomial<Fr, LagrangeCoeff> = domain.lagrange_from_vec(dummy_blob);
-
-    let open_mask: Vec<u64> = (0..cfg.blob_len)
-        .map(|idx| if cfg.openings.contains(&idx) { 1 } else { 0 })
+    let dummy_blob: Vec<Fr> = (0..cfg.blob_len)
+        .map(|x| Fr::from(rng.gen::<u64>()))
         .collect();
-    println!("{:?}", open_mask);
 
-    // let blob_commit: G1 = pp
-    //     .lagrange_basis
-    //     .iter()
-    //     .enumerate()
-    //     .map(|(i, l)| l * dummy_blob[i])
-    //     .sum();
-    // println!("{:?}", G1Affine::from(blob_commit));
-    // println!("{:?}", G1Affine::from(G1::generator() * Fr::from(3000)));
+    let blob_idxs: Vec<Fr> = (0..cfg.blob_len).map(|x| Fr::from(x)).collect();
+    let p_coeffs: Vec<Fr> = lagrange_interpolate(&blob_idxs, &dummy_blob);
+
+    let open_idxs: Vec<Fr> = cfg.openings.iter().map(|idx| Fr::from(*idx)).collect();
+    let open_vals: Vec<Fr> = cfg
+        .openings
+        .iter()
+        .map(|idx| dummy_blob[*idx as usize])
+        .collect();
+    let r_coeffs: Vec<Fr> = lagrange_interpolate(&open_idxs, &open_vals);
+
+    println!("p: {:?}", p_coeffs);
+    println!("r: {:?}", r_coeffs);
+
+    for i in 0..5 {
+        println!("EVAL p: {:?}", eval_polynomial(&p_coeffs, Fr::from(i)));
+        println!("EVAL r: {:?}", eval_polynomial(&r_coeffs, Fr::from(i)));
+    }
 }

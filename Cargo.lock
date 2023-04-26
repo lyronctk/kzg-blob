@@ -316,6 +316,8 @@ version = "0.1.0"
 dependencies = [
  "config-file",
  "halo2-base",
+ "rand",
+ "rand_chacha",
  "serde",
  "serde_json",
 ]
