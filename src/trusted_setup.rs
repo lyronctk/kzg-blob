@@ -47,16 +47,17 @@ fn main() {
 
     // Lagrange basis to commit to interpolation polynomial r(X)
     let mut lagrange_basis: Vec<G1> = Vec::new();
-    for i in 0u64..cfg.t {
+    for i in 0u64..cfg.n {
         let i_fr: Fr = Fr::from(i);
-        let mut lambda: Fr = Fr::from(0);
-        for j in 0u64..cfg.t {
+        let mut lambda: Fr = Fr::from(1);
+        for j in 0u64..cfg.n {
             if i == j {
                 continue;
             };
             let j_fr: Fr = Fr::from(j);
-            lambda += (tau - i_fr) * (i_fr - j_fr).invert().unwrap();
+            lambda *= (tau - j_fr) * (i_fr - j_fr).invert().unwrap();
         }
+        println!("lambda {}: {:?}", i, lambda);
         lagrange_basis.push(G1::generator() * lambda);
     }
 
