@@ -316,7 +316,6 @@ version = "0.1.0"
 dependencies = [
  "config-file",
  "halo2-base",
- "polynomials",
  "rand",
  "rand_chacha",
  "serde",
@@ -426,15 +425,6 @@ name = "pin-project-lite"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0a7ae3ac2f1173085d398531c705756c94a4c56843785df85a60c1a0afac116"
-
-[[package]]
-name = "polynomials"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "207353e2f0e42079823f05c218fea7088ec598b276a0b92db11f9a813df2e04d"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "ppv-lite86"

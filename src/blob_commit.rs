@@ -1,13 +1,14 @@
 use config_file::FromConfigFile;
 use halo2_base::halo2_proofs::{
-    arithmetic::{eval_polynomial, lagrange_interpolate},
     halo2curves::bn256::{Fr, G1, G2},
 };
-use polynomials::{poly, Polynomial};
 use rand::prelude::*;
 use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
+
+mod util;
+use util::poly::Polynomial;
 
 // Specify config file
 const CONFIG_F: &str = "configs/debug.json";
@@ -37,12 +38,11 @@ fn main() {
 
     let mut rng = ChaCha8Rng::seed_from_u64(123);
     let dummy_blob: Vec<Fr> = (0..cfg.blob_len)
-        .map(|x| Fr::from(rng.gen::<u64>()))
+        .map(|_| Fr::from(rng.gen::<u64>()))
         .collect();
 
     let blob_idxs: Vec<Fr> = (0..cfg.blob_len).map(|x| Fr::from(x)).collect();
-    let p_coeffs: Vec<Fr> = lagrange_interpolate(&blob_idxs, &dummy_blob);
-    let p_poly: Polynomial<Fr> = Polynomial::from(p_coeffs.clone());
+    let p: Polynomial<Fr> = Polynomial::from_points(&blob_idxs, &dummy_blob);
 
     let open_idxs: Vec<Fr> = cfg.openings.iter().map(|idx| Fr::from(*idx)).collect();
     let open_vals: Vec<Fr> = cfg
@@ -50,23 +50,24 @@ fn main() {
         .iter()
         .map(|idx| dummy_blob[*idx as usize])
         .collect();
-    let r_coeffs: Vec<Fr> = lagrange_interpolate(&open_idxs, &open_vals);
-    let r_poly: Polynomial<Fr> = Polynomial::from(r_coeffs.clone());
+    let r: Polynomial<Fr> = Polynomial::from_points(&open_idxs, &open_vals);
 
-    // let mut z_poly: Polynomial<Fr> = poly![];
-    // for open_idx in cfg.openings {
-    //     z_poly *= poly![Fr::from(open_idx)]
-    // }
+    let mut z: Polynomial<Fr> = Polynomial::(cfg.openings);
 
-    // let mut z_poly: Polynomial<Fr> = poly![Fr::from(cfg.openings[0]).neg(), Fr::from(1)];
+    let mut z_poly: Polynomial<Fr> = Polynomial::new(vec![Fr::from(1)]);
+    for open_idx in cfg.openings {
+        // Mult by (X - z_i)
+        z_poly = z_poly * Polynomial::new(vec![Fr::from(open_idx).neg(), Fr::from(1)]);
+    }
 
+    let q_poly: (Polynomial<Fr>, Polynomial<Fr>) = Polynomial::div_euclid(&(p - r), z_poly);
+    println!("q: {:?}", q_poly);
 
-    // let mut z_coeffs: Vec<Fr> = vec![Fr::from(cfg.openings[0]).neg(), Fr::from(1)];
-
-    for i in 0..5 {
+    for i in 0..6 {
         println!("== {}", i);
-        println!("EVAL p: {:?}", p_poly.eval(Fr::from(i)));
-        println!("EVAL r: {:?}", r_poly.eval(Fr::from(i)));
+        println!("EVAL p: {:?}", p.eval(Fr::from(i)));
+        println!("EVAL r: {:?}", r.eval(Fr::from(i)));
+        println!("EVAL z: {:?}", z.eval(Fr::from(i)));
         println!("==");
     }
 }
