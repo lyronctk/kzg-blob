@@ -52,22 +52,13 @@ fn main() {
         .collect();
     let r: Polynomial<Fr> = Polynomial::from_points(&open_idxs, &open_vals);
 
-    let mut z: Polynomial<Fr> = Polynomial::(cfg.openings);
+    let mut z: Polynomial<Fr> = Polynomial::vanishing(cfg.openings);
 
-    let mut z_poly: Polynomial<Fr> = Polynomial::new(vec![Fr::from(1)]);
-    for open_idx in cfg.openings {
-        // Mult by (X - z_i)
-        z_poly = z_poly * Polynomial::new(vec![Fr::from(open_idx).neg(), Fr::from(1)]);
+    let (q, rem) = Polynomial::div_euclid(&(p - r), &z);
+    if !rem.is_zero() {
+        panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
     }
 
-    let q_poly: (Polynomial<Fr>, Polynomial<Fr>) = Polynomial::div_euclid(&(p - r), z_poly);
-    println!("q: {:?}", q_poly);
-
-    for i in 0..6 {
-        println!("== {}", i);
-        println!("EVAL p: {:?}", p.eval(Fr::from(i)));
-        println!("EVAL r: {:?}", r.eval(Fr::from(i)));
-        println!("EVAL z: {:?}", z.eval(Fr::from(i)));
-        println!("==");
-    }
+    println!("q: {:?}", q);
+    println!("rem: {:?}", rem);
 }

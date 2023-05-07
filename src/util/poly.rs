@@ -70,6 +70,15 @@ impl<F: FieldExt> Polynomial<F> {
         return Self::new(lagrange_interpolate(points, evals));
     }
 
+    pub fn vanishing(openings: Vec<u64>) -> Self {
+        let mut z: Polynomial<F> = Self::new(vec![F::one()]);
+        for open_idx in openings {
+            // Mult by (X - z_i)
+            z = z * Self::new(vec![F::from(open_idx).neg(), F::one()]);
+        }
+        return z;
+    }
+
     fn deg(&self) -> usize {
         self.0
             .iter()
@@ -82,6 +91,15 @@ impl<F: FieldExt> Polynomial<F> {
 
     pub fn eval(&self, pt: F) -> F {
         return eval_polynomial(&self.0, pt);
+    }
+
+    pub fn is_zero(&self) -> bool {
+        for coeff in &self.0 {
+            if !bool::from(coeff.is_zero()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     fn zero() -> Self {
