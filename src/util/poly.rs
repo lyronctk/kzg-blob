@@ -106,10 +106,6 @@ impl<F: FieldExt> Polynomial<F> {
         acc
     }
 
-    pub fn eval(&self, pt: F) -> F {
-        return eval_polynomial(&self.0, pt);
-    }
-
     pub fn is_zero(&self) -> bool {
         for coeff in &self.0 {
             if !bool::from(coeff.is_zero()) {

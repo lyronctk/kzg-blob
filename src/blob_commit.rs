@@ -1,7 +1,5 @@
 use config_file::FromConfigFile;
-use halo2_base::halo2_proofs::{
-    halo2curves::bn256::{Fr, G1, G2},
-};
+use halo2_base::halo2_proofs::halo2curves::bn256::{Fr, G1, G2};
 use rand::prelude::*;
 use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use serde::{Deserialize, Serialize};
@@ -52,13 +50,15 @@ fn main() {
         .collect();
     let r: Polynomial<Fr> = Polynomial::from_points(&open_idxs, &open_vals);
 
-    let mut z: Polynomial<Fr> = Polynomial::vanishing(cfg.openings);
+    let z: Polynomial<Fr> = Polynomial::vanishing(cfg.openings);
 
-    // let (q, rem) = Polynomial::div_euclid(&(p - r), &z);
-    // if !rem.is_zero() {
-    //     panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
-    // }
+    let (q, rem) = Polynomial::div_euclid(&(p.clone() - r.clone()), &z);
+    if !rem.is_zero() {
+        panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
+    }
 
     println!("commit to p: {:?}", p.eval_ptau(&pp.ptau));
-    // println!("rem: {:?}", rem);
+    println!("commit to q: {:?}", q.eval_ptau(&pp.ptau));
+    println!("z: {:?}", z);
+    println!("r: {:?}", r);
 }
