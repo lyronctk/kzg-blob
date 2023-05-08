@@ -77,6 +77,9 @@ impl<F: FieldExt> Polynomial<F> {
     }
 
     pub fn vanishing(openings: Vec<u64>) -> Self {
+        if openings.is_empty() {
+            panic!("Cannot compute a vanishing polynomial for 0 openings.");
+        }
         let mut z: Polynomial<F> = Self::new(vec![F::one()]);
         for open_idx in openings {
             // Mult by (X - z_i), coefficients of which are [-z_i, 1]
@@ -99,8 +102,11 @@ impl<F: FieldExt> Polynomial<F> {
         if self.0.is_empty() {
             panic!("Cannot evaluate polynomial with no coefficients.");
         }
-        let mut acc = G::generator() * self.0[0];
-        for (i, coeff) in self.0.iter().skip(1).enumerate() {
+        if self.0.len() > ptau.len() {
+            panic!("Aren't enough powers of tau to capture all coefficients.");
+        }
+        let mut acc = G::identity();
+        for (i, coeff) in self.0.iter().enumerate() {
             acc += ptau[i] * coeff.clone();
         }
         acc

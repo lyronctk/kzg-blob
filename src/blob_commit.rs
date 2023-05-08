@@ -1,5 +1,5 @@
 use config_file::FromConfigFile;
-use halo2_base::halo2_proofs::halo2curves::bn256::{pairing, Fr, G1, G2};
+use halo2_base::halo2_proofs::halo2curves::bn256::{pairing, Fr, G1Affine, G2Affine, G1, G2, Gt};
 use rand::prelude::*;
 use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,6 @@ const CONFIG_F: &str = "configs/debug.json";
 #[allow(dead_code)]
 struct Config {
     blob_len: u64,
-    log_blob_len: u64,
     openings: Vec<u64>,
     pp_f: String,
     blob_data_f: String,
@@ -25,9 +24,8 @@ struct Config {
 #[derive(Serialize, Deserialize)]
 #[allow(non_camel_case_types)]
 struct pp {
-    ptau: Vec<G1>,
-    lagrange_basis: Vec<G1>,
-    tau_g2: G2,
+    ptau_g1: Vec<G1>,
+    ptau_g2: Vec<G2>,
 }
 
 fn main() {
@@ -57,8 +55,15 @@ fn main() {
         panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
     }
 
-    let p_bar: G1 = p.eval_ptau(&pp.ptau);
-    let q_bar: G1 = q.eval_ptau(&pp.ptau);
+    let p_bar: G1Affine = G1Affine::from(p.eval_ptau(&pp.ptau_g1));
+    let q_bar: G1Affine = G1Affine::from(q.eval_ptau(&pp.ptau_g1));
+    let z_bar: G2Affine = G2Affine::from(z.eval_ptau(&pp.ptau_g2));
+    let r_bar: G1Affine = G1Affine::from(r.eval_ptau(&pp.ptau_g1));
 
-    pairing(p_bar, g2)
+    let lhs: Gt = pairing(&q_bar, &z_bar);
+    let rhs: Gt = pairing(
+        &G1Affine::from(p_bar - r_bar),
+        &G2Affine::from(pp.ptau_g2[0]),
+    );
+    println!("pairing check: {:?}", lhs == rhs);
 }

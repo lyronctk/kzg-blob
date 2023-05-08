@@ -43,7 +43,7 @@ fn main() {
 
     // Powers of tau in G2 to commit to polynomials z(X) and r(X) 
     let mut ptau_g2: Vec<G2> = vec![G2::generator()];
-    for _ in 1..cfg.openings.len() {
+    for _ in 1..=cfg.openings.len() {
         ptau_g2.push(ptau_g2.last().unwrap() * tau);
     }
 
