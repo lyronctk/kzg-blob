@@ -186,6 +186,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ff"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ded41244b729663b1e574f1b4fb731469f69f79c17667b5d776b16cda0479449"
+dependencies = [
+ "rand_core",
+ "subtle",
+]
+
+[[package]]
 name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -218,7 +228,18 @@ version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dfbfb3a6cfbd390d5c9564ab283a0349b9b9fcd46a706c1eb10e0db70bfbac7"
 dependencies = [
- "ff",
+ "ff 0.12.1",
+ "rand_core",
+ "subtle",
+]
+
+[[package]]
+name = "group"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0f9ef7462f7c099f518d754361858f86d8a07af53ba9af0fe635bbccb151a63"
+dependencies = [
+ "ff 0.13.0",
  "rand_core",
  "subtle",
 ]
@@ -228,7 +249,7 @@ name = "halo2-base"
 version = "0.3.0"
 source = "git+https://github.com/axiom-crypto/halo2-lib?branch=axiom-dev-0406#c5b01648c06f21b2be5ea9005e0ab878faaebbbc"
 dependencies = [
- "ff",
+ "ff 0.12.1",
  "halo2_proofs",
  "itertools",
  "log",
@@ -248,8 +269,8 @@ source = "git+https://github.com/axiom-crypto/halo2.git?tag=v2023_04_06#2e9c8724
 dependencies = [
  "blake2b_simd",
  "crossbeam",
- "ff",
- "group",
+ "ff 0.12.1",
+ "group 0.12.1",
  "halo2curves",
  "rand",
  "rand_core",
@@ -264,8 +285,8 @@ name = "halo2curves"
 version = "0.3.1"
 source = "git+https://github.com/axiom-crypto/halo2.git?tag=v2023_04_06#2e9c8724604c926efff139d7d44dbeebfd8d960b"
 dependencies = [
- "ff",
- "group",
+ "ff 0.12.1",
+ "group 0.12.1",
  "lazy_static",
  "num-bigint",
  "num-traits",
@@ -315,6 +336,7 @@ name = "kzg-blob"
 version = "0.1.0"
 dependencies = [
  "config-file",
+ "group 0.13.0",
  "halo2-base",
  "rand",
  "rand_chacha",
@@ -412,8 +434,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5cc65faf8e7313b4b1fbaa9f7ca917a0eed499a9663be71477f87993604341d8"
 dependencies = [
  "blake2b_simd",
- "ff",
- "group",
+ "ff 0.12.1",
+ "group 0.12.1",
  "lazy_static",
  "rand",
  "static_assertions",

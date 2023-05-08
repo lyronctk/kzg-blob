@@ -54,11 +54,11 @@ fn main() {
 
     let mut z: Polynomial<Fr> = Polynomial::vanishing(cfg.openings);
 
-    let (q, rem) = Polynomial::div_euclid(&(p - r), &z);
-    if !rem.is_zero() {
-        panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
-    }
+    // let (q, rem) = Polynomial::div_euclid(&(p - r), &z);
+    // if !rem.is_zero() {
+    //     panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
+    // }
 
-    println!("q: {:?}", q);
-    println!("rem: {:?}", rem);
+    println!("commit to p: {:?}", p.eval_ptau(&pp.ptau));
+    // println!("rem: {:?}", rem);
 }

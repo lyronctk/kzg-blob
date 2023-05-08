@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 config-file = { version = "0.2.3", features = ["json"] }
+group = "0.13.0"
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "axiom-dev-0406" }
 rand = "0.8.5"
 rand_chacha = "0.3.1"

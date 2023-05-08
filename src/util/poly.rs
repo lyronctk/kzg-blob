@@ -6,10 +6,10 @@
  */
 
 use halo2_base::halo2_proofs::{
-    arithmetic::{eval_polynomial, lagrange_interpolate},
+    arithmetic::{eval_polynomial, lagrange_interpolate, CurveExt},
     halo2curves::FieldExt,
 };
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 
 #[derive(Clone, Debug)]
 pub struct Polynomial<F: FieldExt>(Vec<F>);
@@ -66,17 +66,23 @@ impl<F: FieldExt> Polynomial<F> {
         return Self(coeffs);
     }
 
+    /*
+     * Uses lagrange interpolation to find the lowest degree polynomial that
+     * passes through (points, evals). Coefficients are stored in the monomial
+     * basis w/ increasing degree. Eg Coefficients of f(x) = 2 + x + 3x^2 are
+     * stored as [2, 1, 3].
+     */
     pub fn from_points(points: &[F], evals: &[F]) -> Self {
-        return Self::new(lagrange_interpolate(points, evals));
+        Self::new(lagrange_interpolate(points, evals))
     }
 
     pub fn vanishing(openings: Vec<u64>) -> Self {
         let mut z: Polynomial<F> = Self::new(vec![F::one()]);
         for open_idx in openings {
-            // Mult by (X - z_i)
+            // Mult by (X - z_i), coefficients of which are [-z_i, 1]
             z = z * Self::new(vec![F::from(open_idx).neg(), F::one()]);
         }
-        return z;
+        z
     }
 
     fn deg(&self) -> usize {
@@ -89,6 +95,17 @@ impl<F: FieldExt> Polynomial<F> {
             .unwrap_or(0)
     }
 
+    pub fn eval_ptau<G: CurveExt + Mul<F, Output = G> + AddAssign>(&self, ptau: &[G]) -> G {
+        if self.0.is_empty() {
+            panic!("Cannot evaluate polynomial with no coefficients.");
+        }
+        let mut acc = G::generator() * self.0[0];
+        for (i, coeff) in self.0.iter().skip(1).enumerate() {
+            acc += ptau[i] * coeff.clone();
+        }
+        acc
+    }
+
     pub fn eval(&self, pt: F) -> F {
         return eval_polynomial(&self.0, pt);
     }
@@ -99,7 +116,7 @@ impl<F: FieldExt> Polynomial<F> {
                 return false;
             }
         }
-        return true;
+        true
     }
 
     fn zero() -> Self {
