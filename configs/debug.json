@@ -1,6 +1,5 @@
 {
   "blob_len": 4,
-  "log_blob_len": 2,
   "openings": [2, 3],
   "pp_f": "out/pp_debug.json",
   "blob_data_f": "out/blob_data_debug.json",

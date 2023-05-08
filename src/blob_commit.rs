@@ -1,5 +1,5 @@
 use config_file::FromConfigFile;
-use halo2_base::halo2_proofs::halo2curves::bn256::{Fr, G1, G2};
+use halo2_base::halo2_proofs::halo2curves::bn256::{pairing, Fr, G1, G2};
 use rand::prelude::*;
 use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
 use serde::{Deserialize, Serialize};
@@ -57,8 +57,8 @@ fn main() {
         panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
     }
 
-    println!("commit to p: {:?}", p.eval_ptau(&pp.ptau));
-    println!("commit to q: {:?}", q.eval_ptau(&pp.ptau));
-    println!("z: {:?}", z);
-    println!("r: {:?}", r);
+    let p_bar: G1 = p.eval_ptau(&pp.ptau);
+    let q_bar: G1 = q.eval_ptau(&pp.ptau);
+
+    pairing(p_bar, g2)
 }
