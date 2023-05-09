@@ -332,7 +332,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kzg-blob"
+name = "kzgblob"
 version = "0.1.0"
 dependencies = [
  "config-file",

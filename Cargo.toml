@@ -1,5 +1,5 @@
 [package]
-name = "kzg-blob"
+name = "kzgblob"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,12 +13,3 @@ rand = "0.8.5"
 rand_chacha = "0.3.1"
 serde = "1.0.160"
 serde_json = "1.0.96"
-
-[[bin]]
-name = "trusted_setup"
-path = "src/trusted_setup.rs"
-
-[[bin]]
-name = "blob_commit"
-path = "src/blob_commit.rs"
- 

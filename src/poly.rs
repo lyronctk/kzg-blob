@@ -6,7 +6,7 @@
  */
 
 use halo2_base::halo2_proofs::{
-    arithmetic::{eval_polynomial, lagrange_interpolate, CurveExt},
+    arithmetic::{lagrange_interpolate, CurveExt},
     halo2curves::FieldExt,
 };
 use std::ops::{Add, AddAssign, Mul, Neg, Sub};
@@ -86,6 +86,10 @@ impl<F: FieldExt> Polynomial<F> {
             z = z * Self::new(vec![F::from(open_idx).neg(), F::one()]);
         }
         z
+    }
+
+    pub fn get_coeffs(&self) -> Vec<F> {
+        self.0.clone()
     }
 
     fn deg(&self) -> usize {
