@@ -1,6 +1,6 @@
 /*
- * For doing basic operations {Add, Sub, Mul, Div, Eval} for polynomials
- * defined over finite fields. Used Euclidean division.
+ * For doing core operations of polynomials defined over finite fields. Used 
+ * custom implementation here because we needed Euclidean division.
  *
  * Inspired by https://applied-math-coding.medium.com/implementing-polynomial-division-rust-ca2a59370003
  */
@@ -14,9 +14,23 @@ use std::ops::{Add, AddAssign, Mul, Neg, Sub};
 #[derive(Clone, Debug)]
 pub struct Polynomial<F: FieldExt>(Vec<F>);
 
+impl<F: FieldExt> Neg for Polynomial<F> {
+    type Output = Self;
+
+    /*
+     * Negating the polynomial. 
+     */
+    fn neg(self) -> Self::Output {
+        Polynomial(self.0.iter().map(|a| a.neg()).collect())
+    }
+}
+
 impl<F: FieldExt> Add for Polynomial<F> {
     type Output = Self;
 
+    /*
+     * Adding a polynomial on the right.
+     */
     fn add(self, rhs: Self) -> Self::Output {
         let mut a = vec![];
         for i in 0..usize::max(self.deg(), rhs.deg()) + 1 {
@@ -29,6 +43,9 @@ impl<F: FieldExt> Add for Polynomial<F> {
 impl<F: FieldExt> Sub for Polynomial<F> {
     type Output = Self;
 
+    /*
+     * Subtracting a polynomial on the right.
+     */
     fn sub(self, rhs: Self) -> Self::Output {
         let mut a = vec![];
         for i in 0..usize::max(self.deg(), rhs.deg()) + 1 {
@@ -38,17 +55,12 @@ impl<F: FieldExt> Sub for Polynomial<F> {
     }
 }
 
-impl<F: FieldExt> Neg for Polynomial<F> {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        Polynomial(self.0.iter().map(|a| a.neg()).collect())
-    }
-}
-
 impl<F: FieldExt> Mul for Polynomial<F> {
     type Output = Self;
 
+    /*
+     * Multiplying a polynomial on the right. 
+     */
     fn mul(self, rhs: Self) -> Self::Output {
         let [n, m] = [self.deg(), rhs.deg()];
         let mut a = vec![F::zero(); n + m + 1];
@@ -62,46 +74,42 @@ impl<F: FieldExt> Mul for Polynomial<F> {
 }
 
 impl<F: FieldExt> Polynomial<F> {
+    /*
+     * Instantiates a new polynomial coefficients stored in the monomial
+     * basis w/ increasing degree. Eg Coefficients of f(x) = 2 + x + 3x^2 are
+     * stored as [2, 1, 3].
+     */
     pub fn new(coeffs: Vec<F>) -> Self {
         return Self(coeffs);
     }
 
     /*
      * Uses lagrange interpolation to find the lowest degree polynomial that
-     * passes through (points, evals). Coefficients are stored in the monomial
-     * basis w/ increasing degree. Eg Coefficients of f(x) = 2 + x + 3x^2 are
-     * stored as [2, 1, 3].
+     * passes through (points, evals).
      */
     pub fn from_points(points: &[F], evals: &[F]) -> Self {
         Self::new(lagrange_interpolate(points, evals))
     }
 
+    /*
+     * Computes the vanishing polynomial z(X) = Σ X - z_i for a vector of 
+     * indices. 
+     */
     pub fn vanishing(openings: Vec<u64>) -> Self {
         if openings.is_empty() {
             panic!("Cannot compute a vanishing polynomial for 0 openings.");
         }
         let mut z: Polynomial<F> = Self::new(vec![F::one()]);
         for open_idx in openings {
-            // Mult by (X - z_i), coefficients of which are [-z_i, 1]
             z = z * Self::new(vec![F::from(open_idx).neg(), F::one()]);
         }
         z
     }
 
-    pub fn get_coeffs(&self) -> Vec<F> {
-        self.0.clone()
-    }
-
-    fn deg(&self) -> usize {
-        self.0
-            .iter()
-            .enumerate()
-            .rev()
-            .find(|(_, a)| !bool::from(a.is_zero()))
-            .map(|(idx, _)| idx)
-            .unwrap_or(0)
-    }
-
+    /*
+     * Evaluates this polynomial at f(τ) using powers tau [G * τ^0, G * τ^1, 
+     * ..., G * τ^i]. 
+     */
     pub fn eval_ptau<G: CurveExt + Mul<F, Output = G> + AddAssign>(&self, ptau: &[G]) -> G {
         if self.0.is_empty() {
             panic!("Cannot evaluate polynomial with no coefficients.");
@@ -116,6 +124,29 @@ impl<F: FieldExt> Polynomial<F> {
         acc
     }
 
+    /*
+     * Accessor function to get the coefficients of this polynomial. 
+     */
+    pub fn get_coeffs(&self) -> Vec<F> {
+        self.0.clone()
+    }
+
+    /*
+     * Get the degree of this polynomial. 
+     */
+    fn deg(&self) -> usize {
+        self.0
+            .iter()
+            .enumerate()
+            .rev()
+            .find(|(_, a)| !bool::from(a.is_zero()))
+            .map(|(idx, _)| idx)
+            .unwrap_or(0)
+    }
+
+    /*
+     * Checks whether this is a zero polynomial. 
+     */
     pub fn is_zero(&self) -> bool {
         for coeff in &self.0 {
             if !bool::from(coeff.is_zero()) {
@@ -125,10 +156,17 @@ impl<F: FieldExt> Polynomial<F> {
         true
     }
 
+    /*
+     * Returns the polynomial f(X) = 0.
+     */
     fn zero() -> Self {
-        Polynomial(vec![F::zero()]) // represents the polynomial f(x) = 0
+        Polynomial(vec![F::zero()])
     }
 
+    /*
+     * Euclidean division for two polynomials, with f(X) as the dividend and 
+     * g(X) as the divisor. Returns (quotient, remainder). 
+     */
     pub fn div_euclid(f: &Self, g: &Self) -> (Self, Self) {
         let [n, m] = [f.deg(), g.deg()];
         if n < m {
