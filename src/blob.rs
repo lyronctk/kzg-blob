@@ -1,6 +1,6 @@
 /*
- * Client implementation for reading the proto-danksharding blobs. Covers 
- *   1) what happens in the Ethereum nodes when first committing to the data and 
+ * Client implementation for reading the proto-danksharding blobs. Covers
+ *   1) what happens in the Ethereum nodes when first committing to the data and
  *   2) logic that must happen in the prover at a later time to prove openings
  *      to the blob commitment
  */
@@ -20,6 +20,16 @@ pub struct Blob {
     pp: pp,
     data: Vec<Fr>,
     p: Polynomial<Fr>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CircuitInputs {
+    pub p_bar: G1Affine,
+    pub open_idxs: Vec<Fr>,
+    pub open_vals: Vec<Fr>,
+    pub q_bar: G1Affine,
+    pub z_coeffs: Vec<Fr>,
+    pub r_coeffs: Vec<Fr>
 }
 
 impl Blob {
@@ -70,7 +80,7 @@ impl Blob {
      * Convenience function for running a mock setup() for the commitment
      * scheme. This is not secure.
      */
-    pub fn trusted_setup_mock(tau: u64, blob_len: u64, n_openings: u64) -> pp {
+    pub fn mock_trusted_setup(tau: u64, blob_len: u64, n_openings: u64) -> pp {
         let tau_fr: Fr = Fr::from(tau);
 
         // Powers of tau in G1 to commit to polynomials p(X) and q(X)
@@ -115,7 +125,7 @@ mod tests {
         let dummy_data: Vec<Fr> = (0..blob_len).map(|_| Fr::from(rng.gen::<u64>())).collect();
 
         // Run mock trusted setup
-        let pp = Blob::trusted_setup_mock(tau, blob_len, openings.len() as u64);
+        let pp = Blob::mock_trusted_setup(tau, blob_len, openings.len() as u64);
 
         // Commit to the blob data
         let blob: Blob = Blob::new(&dummy_data, pp.clone());

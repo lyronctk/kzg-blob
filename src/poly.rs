@@ -1,10 +1,8 @@
 /*
  * For doing core operations of polynomials defined over finite fields. Used 
  * custom implementation here because we needed Euclidean division.
- *
  * Inspired by https://applied-math-coding.medium.com/implementing-polynomial-division-rust-ca2a59370003
  */
-
 use halo2_base::halo2_proofs::{
     arithmetic::{lagrange_interpolate, CurveExt},
     halo2curves::FieldExt,
