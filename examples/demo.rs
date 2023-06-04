@@ -11,12 +11,15 @@ use std::fs::File;
 
 use kzgblob::blob::{Blob, CircuitInputs};
 
-// Debugging parameters
-const BLOB_LEN: u64 = 32;
-const OPENINGS: [u64; 2] = [2, 3];
+// Demo transactions
 const BYTES_IN_FR: usize = 32;
+const FR_PER_TX: usize = 2;
 const ADDR_LEN: usize = 40;
-const N_TX: u64 = BLOB_LEN / 2; // div by 2 since one tx == 2 Fr elements
+
+// Blob parameters
+const BLOB_LEN: u64 = 32;
+const N_TX: u64 = BLOB_LEN / FR_PER_TX as u64;
+const OPEN_TX_IDX: usize = 5;
 
 // Output files
 const OUT_PP: &str = "out/pp.json";
@@ -29,9 +32,9 @@ const TAU: u64 = 321;
 struct DemoTx {
     from: String,
     to: String,
-    gasLimit: u64,
-    maxFeePerGas: u64,
-    maxPriorityFeePerGas: u64,
+    gas_limit: u64,
+    max_fee_per_gas: u64,
+    max_priority_fee_per_gas: u64,
     nonce: u64,
     value: u64,
 }
@@ -63,9 +66,9 @@ fn random_tx(rng: &mut ThreadRng) -> DemoTx {
     DemoTx {
         from: format!("0x{}", Alphanumeric.sample_string(rng, ADDR_LEN)),
         to: format!("0x{}", Alphanumeric.sample_string(rng, ADDR_LEN)),
-        gasLimit: rng.gen_range(10000..30000),
-        maxFeePerGas: rng.gen_range(100..500),
-        maxPriorityFeePerGas: rng.gen_range(5..15),
+        gas_limit: rng.gen_range(10000..30000),
+        max_fee_per_gas: rng.gen_range(100..500),
+        max_priority_fee_per_gas: rng.gen_range(5..15),
         nonce: rng.gen_range(0..30),
         value: rng.gen_range(10000000000..1000000000000),
     }
@@ -84,22 +87,34 @@ fn main() {
 
     println!("== Representing the blob as field elements in Fr");
     let blob: Vec<Fr> = blob_txs
-        .into_iter()
-        .map(|tx| bytes_to_fr(unsafe { any_as_u8_slice(&tx) }))
+        .iter()
+        .map(|tx| bytes_to_fr(unsafe { any_as_u8_slice(&tx.clone()) }))
         .flatten()
         .collect();
     println!("- {:?}", blob);
     println!("==");
 
-    // // Run mock trusted setup
-    // let pp = Blob::mock_trusted_setup(TAU, BLOB_LEN, OPENINGS.len() as u64);
+    println!("== Running mock trusted setup");
+    let pp = Blob::mock_trusted_setup(TAU, BLOB_LEN, FR_PER_TX as u64);
+    println!("- Done");
+    println!("==");
 
-    // // Commit to blob data
-    // let blob: Blob = Blob::new(&dummy_data, pp.clone());
-    // let p_bar = blob.commit();
+    println!("== Committing to the blob data");
+    let blob: Blob = Blob::new(&blob, pp.clone());
+    let p_bar = blob.commit();
+    println!("- {:?}", p_bar);
+    println!("==");
 
-    // // Compute opening proof
-    // let (q_bar, z_coeffs, r_coeffs) = blob.open_prf(OPENINGS.to_vec());
+    println!("== Computing the opening proof for this tx");
+    let open_idxs: Vec<u64> = (OPEN_TX_IDX * FR_PER_TX..(OPEN_TX_IDX + 1) * FR_PER_TX)
+        .collect::<Vec<usize>>()
+        .into_iter()
+        .map(|x| x as u64)
+        .collect();
+    let (q_bar, z_coeffs, r_coeffs) = blob.open_prf(open_idxs);
+    println!("- {:?}", blob_txs[OPEN_TX_IDX]);
+    println!("- {:?}", q_bar);
+    println!("==");
 
     // // Write public parameters & circuit inputs to json
     // let circuit_inputs = CircuitInputs {

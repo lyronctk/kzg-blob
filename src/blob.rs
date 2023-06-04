@@ -72,9 +72,6 @@ impl Blob {
             panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
         }
 
-        println!("z: {:?}", z);
-        println!("r: {:?}", r);
-
         let q_bar: G1Affine = G1Affine::from(q.eval_ptau(&self.pp.ptau_g1));
         (q_bar, z.get_coeffs(), r.get_coeffs())
     }
