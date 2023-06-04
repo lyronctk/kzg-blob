@@ -1,4 +1,4 @@
-# KZG Blob Reads
+# Client Implementation for KZG Blob Reads
 Prove batch multi-opens of KZG blobs described in EIP-4844.
 
 ## Motivation
