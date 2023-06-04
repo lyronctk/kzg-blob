@@ -72,6 +72,9 @@ impl Blob {
             panic!("p(X) - r(X) is not divisible by z(X). Cannot compute q(X)");
         }
 
+        println!("z: {:?}", z);
+        println!("r: {:?}", r);
+
         let q_bar: G1Affine = G1Affine::from(q.eval_ptau(&self.pp.ptau_g1));
         (q_bar, z.get_coeffs(), r.get_coeffs())
     }
@@ -136,8 +139,8 @@ mod tests {
         let z: Polynomial<Fr> = Polynomial::new(z_coeffs);
         let r: Polynomial<Fr> = Polynomial::new(r_coeffs);
 
-        // Confirm that the proof passes the pairing check passes. Will be
-        // carried out in the circuit
+        // Confirm that the pairing check passes. Will be carried out in the 
+        // circuit
         let z_bar: G2Affine = G2Affine::from(z.eval_ptau(&pp.ptau_g2));
         let r_bar: G1Affine = G1Affine::from(r.eval_ptau(&pp.ptau_g1));
         let lhs: Gt = pairing(&q_bar, &z_bar);
