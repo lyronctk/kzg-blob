@@ -17,7 +17,8 @@ const FR_PER_TX: usize = 2;
 const ADDR_LEN: usize = 40;
 
 // Blob parameters
-const BLOB_LEN: u64 = 32;
+const K: u32 = 5;
+const BLOB_LEN: u64 = 2u64.pow(K);
 const N_TX: u64 = BLOB_LEN / FR_PER_TX as u64;
 const OPEN_TX_IDX: usize = 5;
 
@@ -95,7 +96,7 @@ fn main() {
     println!("==");
 
     println!("== Running mock trusted setup");
-    let pp = Blob::mock_trusted_setup(TAU, BLOB_LEN, FR_PER_TX as u64);
+    let pp = Blob::mock_trusted_setup(TAU, K, FR_PER_TX as u64);
     println!("- Done");
     println!("==");
 

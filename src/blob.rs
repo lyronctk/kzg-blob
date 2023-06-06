@@ -4,16 +4,20 @@
  *   2) logic that must happen in the prover at a later time to prove openings
  *      to the blob commitment
  */
-use halo2_base::halo2_proofs::halo2curves::bn256::{Fr, G1Affine, G1, G2};
+use halo2_base::halo2_proofs::{halo2curves::{bn256::{Fr, G1Affine, G1, G2}, group::ff::PrimeField, FieldExt}, arithmetic::{best_fft, lagrange_interpolate, eval_polynomial, Field}};
 use serde::{Deserialize, Serialize};
+use halo2_base::halo2_proofs::halo2curves::group::Group;
 
 use crate::poly::Polynomial;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[allow(non_camel_case_types)]
 pub struct pp {
+    pub K: u32,
     pub ptau_g1: Vec<G1>,
     pub ptau_g2: Vec<G2>,
+    // Commitment to the lagrange bases
+    pub ptau_Lis: Vec<G1>,
 }
 
 pub struct Blob {
@@ -33,13 +37,20 @@ pub struct CircuitInputs {
 }
 
 impl Blob {
+    pub fn root_of_unity(K: u32) -> Fr {
+        Fr::root_of_unity().pow(&[2u64.pow(Fr::S - K) as u64, 0, 0, 0])
+    }
+
     /*
      * Instantiates Blob struct w/ public parameters, blob data, and
      * polynomial p(X) that interpolates the blob data.
      */
     pub fn new(d: &Vec<Fr>, pp: pp) -> Self {
-        let sz: u64 = d.len() as u64;
-        let idxs: Vec<Fr> = (0..sz).map(|x| Fr::from(x)).collect();
+        let w = Self::root_of_unity(pp.K);
+        let mut idxs = vec![w];
+        for _ in 1..2u32.pow(pp.K) as usize {
+            idxs.push(idxs.last().unwrap() * w);
+        }
         Blob {
             pp: pp,
             data: d.clone(),
@@ -77,10 +88,24 @@ impl Blob {
     }
 
     /*
+     * Evaluate a polynomial with group elements as the coefficients
+     */
+    pub fn evaluate_group_polynomial(coeffs: Vec<G1>, x: Fr) -> G1 {
+        let mut out = G1::identity();
+        let mut x_ptr = Fr::one();
+        for c in coeffs {
+            out += c * x_ptr;
+            x_ptr *= x;
+        }
+        return out;
+    }
+
+    /*
      * Convenience function for running a mock setup() for the commitment
      * scheme. This is not secure.
      */
-    pub fn mock_trusted_setup(tau: u64, blob_len: u64, n_openings: u64) -> pp {
+    pub fn mock_trusted_setup(tau: u64, K: u32, n_openings: u64) -> pp {
+        let blob_len = 2u32.pow(K);
         let tau_fr: Fr = Fr::from(tau);
 
         // Powers of tau in G1 to commit to polynomials p(X) and q(X)
@@ -95,9 +120,26 @@ impl Blob {
             ptau_g2.push(ptau_g2.last().unwrap() * tau_fr);
         }
 
+        // Compute the 
+        let selected_root = Fr::root_of_unity().pow(&[2u64.pow(Fr::S - K) as u64, 0, 0, 0]);
+
+        let mut committed_lagrange_bases: Vec<G1> = vec![];
+        for i in 0..blob_len {
+            let mut evals = vec![Fr::zero(); blob_len as usize];
+            evals[i as usize] = Fr::one();
+            let mut points = vec![Fr::one()];
+            for _ in 1..blob_len {
+                points.push(points.last().unwrap() * selected_root)
+            }
+            let coeffs = lagrange_interpolate(&points, &evals);
+            committed_lagrange_bases.push(G1::generator() * eval_polynomial(&coeffs, tau_fr));
+        }
+
         pp {
-            ptau_g1: ptau_g1,
-            ptau_g2: ptau_g2,
+            ptau_g1,
+            ptau_g2,
+            ptau_Lis: committed_lagrange_bases,
+            K,
         }
     }
 }
@@ -117,7 +159,8 @@ mod tests {
     fn verify_sample_proof() {
         // Test parameters
         let tau: u64 = 123;
-        let blob_len: u64 = 4;
+        let K: u32 = 2;
+        let blob_len: u64 = 2u64.pow(K);
         let openings: Vec<u64> = vec![2, 3];
 
         // Dummy data
@@ -125,7 +168,7 @@ mod tests {
         let dummy_data: Vec<Fr> = (0..blob_len).map(|_| Fr::from(rng.gen::<u64>())).collect();
 
         // Run mock trusted setup
-        let pp = Blob::mock_trusted_setup(tau, blob_len, openings.len() as u64);
+        let pp = Blob::mock_trusted_setup(tau, K, openings.len() as u64);
 
         // Commit to the blob data
         let blob: Blob = Blob::new(&dummy_data, pp.clone());
