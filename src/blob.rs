@@ -76,9 +76,9 @@ impl Blob {
         let idxs_z: Vec<Fr> = idxs.iter().map(|idx| w.pow(&[*idx, 0, 0, 0])).collect();
 
         let vals: Vec<Fr> = idxs.iter().map(|idx| self.data[*idx as usize]).collect();
-        let r: Polynomial<Fr> = Polynomial::from_points(&idxs_fr, &vals);
+        let r: Polynomial<Fr> = Polynomial::from_points(&idxs_z, &vals);
 
-        let z: Polynomial<Fr> = Polynomial::vanishing(idxs_fr);
+        let z: Polynomial<Fr> = Polynomial::vanishing(idxs_z);
 
         let (q, rem) = Polynomial::div_euclid(&(self.p.clone() - r.clone()), &z);
         if !rem.is_zero() {
