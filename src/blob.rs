@@ -47,7 +47,7 @@ impl Blob {
      */
     pub fn new(d: &Vec<Fr>, pp: pp) -> Self {
         let w = Self::root_of_unity(pp.K);
-        let mut idxs = vec![w];
+        let mut idxs = vec![Fr::one()];
         for _ in 1..2u32.pow(pp.K) as usize {
             idxs.push(idxs.last().unwrap() * w);
         }
@@ -72,7 +72,8 @@ impl Blob {
      * recompute within the circuit.
      */
     pub fn open_prf(&self, idxs: Vec<u64>) -> (G1Affine, Vec<Fr>, Vec<Fr>) {
-        let idxs_fr: Vec<Fr> = idxs.iter().map(|idx| Fr::from(*idx)).collect();
+        let w = Self::root_of_unity(self.pp.K);
+        let idxs_fr: Vec<Fr> = idxs.iter().map(|idx| w.pow(&[*idx, 0, 0, 0])).collect();
         let vals: Vec<Fr> = idxs.iter().map(|idx| self.data[*idx as usize]).collect();
         let r: Polynomial<Fr> = Polynomial::from_points(&idxs_fr, &vals);
 
@@ -127,10 +128,12 @@ impl Blob {
         for i in 0..blob_len {
             let mut evals = vec![Fr::zero(); blob_len as usize];
             evals[i as usize] = Fr::one();
+
             let mut points = vec![Fr::one()];
             for _ in 1..blob_len {
                 points.push(points.last().unwrap() * selected_root)
             }
+
             let coeffs = lagrange_interpolate(&points, &evals);
             committed_lagrange_bases.push(G1::generator() * eval_polynomial(&coeffs, tau_fr));
         }
