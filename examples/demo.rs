@@ -2,28 +2,21 @@
  * Showcases Blob usage.
  */
 use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+use kzgblob::blob::Blob;
 use rand::{
     distributions::{Alphanumeric, DistString},
     prelude::*,
 };
-use rand_chacha::{rand_core::SeedableRng, ChaCha8Rng};
-use std::fs::File;
-
-use kzgblob::blob::{Blob, CircuitInputs};
 
 // Demo transactions
-const BYTES_IN_FR: usize = 32;
-const FR_PER_TX: usize = 2;
-const ADDR_LEN: usize = 40;
+const BYTES_IN_FR: usize = 32; // element in FR is 32 bytes wide
+const FR_PER_TX: usize = 2; // a DemoTx can be represented by two FR elements 
+const ADDR_LEN: usize = 40; // demo addresses are 40 characters 
 
 // Blob parameters
 const BLOB_LEN: u64 = 32;
 const N_TX: u64 = BLOB_LEN / FR_PER_TX as u64;
 const OPEN_TX_IDX: usize = 5;
-
-// Output files
-const OUT_PP: &str = "out/pp.json";
-const OUT_CIRCUIT: &str = "out/circuit_inputs.json";
 
 // Will be toxic waste in practice
 const TAU: u64 = 321;
@@ -115,19 +108,4 @@ fn main() {
     println!("- {:?}", blob_txs[OPEN_TX_IDX]);
     println!("- {:?}", q_bar);
     println!("==");
-
-    // // Write public parameters & circuit inputs to json
-    // let circuit_inputs = CircuitInputs {
-    //     p_bar: p_bar,
-    //     open_idxs: OPENINGS.iter().map(|idx| Fr::from(*idx)).collect(),
-    //     open_vals: OPENINGS
-    //         .iter()
-    //         .map(|idx| dummy_data[*idx as usize])
-    //         .collect(),
-    //     q_bar: q_bar,
-    //     z_coeffs: z_coeffs,
-    //     r_coeffs: r_coeffs,
-    // };
-    // let _ = serde_json::to_writer(&File::create(OUT_PP).unwrap(), &pp);
-    // let _ = serde_json::to_writer(&File::create(OUT_CIRCUIT).unwrap(), &circuit_inputs);
 }
