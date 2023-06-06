@@ -21,8 +21,8 @@ pub struct pp {
 }
 
 pub struct Blob {
-    pp: pp,
-    data: Vec<Fr>,
+    pub pp: pp,
+    pub data: Vec<Fr>,
     p: Polynomial<Fr>,
 }
 
@@ -71,9 +71,10 @@ impl Blob {
      * is q(τ). Also saves the coefficients of z(X) and r(X) to avoid having to
      * recompute within the circuit.
      */
-    pub fn open_prf(&self, idxs: Vec<u64>) -> (G1Affine, Vec<Fr>, Vec<Fr>) {
+    pub fn open_prf(&self, idxs: &Vec<u64>) -> (G1Affine, Vec<Fr>, Vec<Fr>) {
         let w = Self::root_of_unity(self.pp.K);
-        let idxs_fr: Vec<Fr> = idxs.iter().map(|idx| w.pow(&[*idx, 0, 0, 0])).collect();
+        let idxs_z: Vec<Fr> = idxs.iter().map(|idx| w.pow(&[*idx, 0, 0, 0])).collect();
+
         let vals: Vec<Fr> = idxs.iter().map(|idx| self.data[*idx as usize]).collect();
         let r: Polynomial<Fr> = Polynomial::from_points(&idxs_fr, &vals);
 

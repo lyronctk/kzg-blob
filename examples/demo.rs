@@ -1,7 +1,7 @@
 /*
  * Showcases Blob usage.
  */
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+use halo2_base::halo2_proofs::{halo2curves::{bn256::{Fr, G1}, group::Group}, poly::kzg::msm};
 use rand::{
     distributions::{Alphanumeric, DistString},
     prelude::*,
@@ -112,23 +112,37 @@ fn main() {
         .into_iter()
         .map(|x| x as u64)
         .collect();
-    let (q_bar, z_coeffs, r_coeffs) = blob.open_prf(open_idxs);
+    let (q_bar, z_coeffs, r_coeffs) = blob.open_prf(&open_idxs);
     println!("- {:?}", blob_txs[OPEN_TX_IDX]);
     println!("- {:?}", q_bar);
     println!("==");
 
-    // // Write public parameters & circuit inputs to json
-    // let circuit_inputs = CircuitInputs {
-    //     p_bar: p_bar,
-    //     open_idxs: OPENINGS.iter().map(|idx| Fr::from(*idx)).collect(),
-    //     open_vals: OPENINGS
-    //         .iter()
-    //         .map(|idx| dummy_data[*idx as usize])
-    //         .collect(),
-    //     q_bar: q_bar,
-    //     z_coeffs: z_coeffs,
-    //     r_coeffs: r_coeffs,
-    // };
-    // let _ = serde_json::to_writer(&File::create(OUT_PP).unwrap(), &pp);
-    // let _ = serde_json::to_writer(&File::create(OUT_CIRCUIT).unwrap(), &circuit_inputs);
+    // TODO: Move this to a test
+    // Perform a check to ensure that r_coeffs and the committed lagrange bases evaluate to the same thing
+    let mut r_eval_left = G1::identity();
+    for (ix, c) in r_coeffs.iter().enumerate() {
+        r_eval_left += pp.ptau_g1[ix] * c;
+    }
+
+    let r_points: Vec<_> = open_idxs.iter().map(|idx| blob.data[*idx as usize]).collect();
+    let mut r_eval_right = G1::identity();
+    for (ix, r) in open_idxs.iter().zip(r_points) {
+        r_eval_right += pp.ptau_lis[*ix as usize] * r;
+    }
+    assert_eq!(r_eval_left, r_eval_right);
+    
+    // Write public parameters & circuit inputs to json
+    let circuit_inputs = CircuitInputs {
+        p_bar: p_bar,
+        open_idxs: open_idxs.iter().map(|idx| Fr::from(*idx)).collect(),
+        open_vals: open_idxs
+            .iter()
+            .map(|idx| blob.data[*idx as usize])
+            .collect(),
+        q_bar: q_bar,
+        z_coeffs: z_coeffs,
+        r_coeffs: r_coeffs,
+    };
+    let _ = serde_json::to_writer(&File::create(OUT_PP).unwrap(), &pp);
+    let _ = serde_json::to_writer(&File::create(OUT_CIRCUIT).unwrap(), &circuit_inputs);
 }
