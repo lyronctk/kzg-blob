@@ -17,7 +17,7 @@ pub struct pp {
     pub ptau_g1: Vec<G1>,
     pub ptau_g2: Vec<G2>,
     // Commitment to the lagrange bases
-    pub ptau_Lis: Vec<G1>,
+    pub ptau_lis: Vec<G1>,
 }
 
 pub struct Blob {
@@ -77,7 +77,7 @@ impl Blob {
         let vals: Vec<Fr> = idxs.iter().map(|idx| self.data[*idx as usize]).collect();
         let r: Polynomial<Fr> = Polynomial::from_points(&idxs_fr, &vals);
 
-        let z: Polynomial<Fr> = Polynomial::vanishing(idxs);
+        let z: Polynomial<Fr> = Polynomial::vanishing(idxs_fr);
 
         let (q, rem) = Polynomial::div_euclid(&(self.p.clone() - r.clone()), &z);
         if !rem.is_zero() {
@@ -141,7 +141,7 @@ impl Blob {
         pp {
             ptau_g1,
             ptau_g2,
-            ptau_Lis: committed_lagrange_bases,
+            ptau_lis: committed_lagrange_bases,
             K,
         }
     }
