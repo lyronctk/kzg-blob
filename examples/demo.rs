@@ -1,7 +1,13 @@
 /*
  * Showcases Blob usage.
  */
-use halo2_base::halo2_proofs::{halo2curves::{bn256::{Fr, G1}, group::Group}, poly::kzg::msm};
+use halo2_base::halo2_proofs::{
+    halo2curves::{
+        bn256::{Fr, G1},
+        group::Group,
+    },
+    poly::kzg::msm,
+};
 use kzgblob::blob::Blob;
 use rand::{
     distributions::{Alphanumeric, DistString},
@@ -10,8 +16,8 @@ use rand::{
 
 // Demo transactions
 const BYTES_IN_FR: usize = 32; // element in FR is 32 bytes wide
-const FR_PER_TX: usize = 2; // a DemoTx can be represented by two FR elements 
-const ADDR_LEN: usize = 40; // demo addresses are 40 characters 
+const FR_PER_TX: usize = 2; // a DemoTx can be represented by two FR elements
+const ADDR_LEN: usize = 40; // demo addresses are 40 characters
 
 // Blob parameters
 const K: u32 = 5;
@@ -108,5 +114,16 @@ fn main() {
     let (q_bar, z_coeffs, r_coeffs) = blob.open_prf(&open_idxs);
     println!("- {:?}", blob_txs[OPEN_TX_IDX]);
     println!("- {:?}", q_bar);
+    println!("==");
+
+    println!("== Running the KZG multi-open verifier w/ KZGChip");
+    println!("- [Public Signal] Commitment: {:?}", p_bar);
+    println!("- [Public Signal] Tx Open: {:?}", blob_txs[OPEN_TX_IDX]);
+
+    // Placeholder proof from unit test in our branch. Will replace with
+    // real once PR is merged.
+    println!(
+        "- [Proof] Bytes: [51, 212, 226, 43, 117, 95, 65, ..., 80, 190, 131, 212, 110, 141]"
+    );
     println!("==");
 }
